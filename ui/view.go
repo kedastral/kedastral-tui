@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/charmbracelet/lipgloss"
 	"github.com/HatiCode/kedastral-tui/client"
 	"github.com/HatiCode/kedastral-tui/components"
+	"github.com/charmbracelet/lipgloss"
 )
 
 var (

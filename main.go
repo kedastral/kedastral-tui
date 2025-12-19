@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/HatiCode/kedastral-tui/client"
 	"github.com/HatiCode/kedastral-tui/config"
 	"github.com/HatiCode/kedastral-tui/ui"
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 var version = "dev"

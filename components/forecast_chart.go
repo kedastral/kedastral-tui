@@ -6,8 +6,8 @@ import (
 	"math"
 	"strings"
 
-	"github.com/charmbracelet/lipgloss"
 	"github.com/HatiCode/kedastral-tui/client"
+	"github.com/charmbracelet/lipgloss"
 )
 
 // ForecastChart renders an ASCII line chart of forecast values.
@@ -40,11 +40,7 @@ func (c *ForecastChart) Render(snapshot *client.SnapshotData) string {
 	metric := snapshot.Snapshot.Metric
 
 	chartWidth := c.width - 15
-	chartHeight := c.height
-
-	if chartHeight < 5 {
-		chartHeight = 5
-	}
+	chartHeight := max(c.height, 5)
 	if chartWidth < 20 {
 		chartWidth = 20
 	}

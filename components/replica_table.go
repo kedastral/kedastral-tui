@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/lipgloss"
 	"github.com/HatiCode/kedastral-tui/client"
+	"github.com/charmbracelet/lipgloss"
 )
 
 // ReplicaTable renders a table of replica scaling decisions.
@@ -43,10 +43,7 @@ func (r *ReplicaTable) Render(snapshot *client.SnapshotData) string {
 	snap := snapshot.Snapshot
 	stepDuration := time.Duration(snap.StepSeconds) * time.Second
 
-	maxRows := 10
-	if len(snap.DesiredReplicas) < maxRows {
-		maxRows = len(snap.DesiredReplicas)
-	}
+	maxRows := min(len(snap.DesiredReplicas), 10)
 
 	for i := 0; i < maxRows; i++ {
 		timeOffset := stepDuration * time.Duration(i)

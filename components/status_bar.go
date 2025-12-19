@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/lipgloss"
 	"github.com/HatiCode/kedastral-tui/client"
+	"github.com/charmbracelet/lipgloss"
 )
 
 // StatusBar renders the header status bar.

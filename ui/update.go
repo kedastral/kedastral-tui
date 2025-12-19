@@ -3,8 +3,8 @@ package ui
 import (
 	"context"
 
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/HatiCode/kedastral-tui/client"
+	tea "github.com/charmbracelet/bubbletea"
 	"time"
 )
 

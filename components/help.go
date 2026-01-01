@@ -35,11 +35,39 @@ func (h *Help) Render() string {
 		key  string
 		desc string
 	}{
+		{"Tab", "Switch panel focus (Sidebar → Main → Bottom)"},
+		{"Shift+Tab", "Switch panel focus (reverse)"},
+		{"W", "Jump to sidebar (workload list)"},
+		{"M", "Jump to main panel"},
+		{"", ""},
+		{"1-4", "Jump to tab (Charts/Tables/Config/Logs)"},
+		{"H, L or ←, →", "Navigate tabs left/right"},
+		{"J, K or ↑, ↓", "Scroll content up/down"},
+		{"G", "Jump to top of scrollable content"},
+		{"Shift+G", "Jump to bottom of scrollable content"},
+		{"Ctrl+D/U", "Scroll half page down/up"},
+		{"", ""},
 		{"SPACE", "Toggle between live and paused modes"},
 		{"R", "Manual refresh (fetch latest data)"},
+		{"Ctrl+R", "Retry last failed request"},
+		{"", ""},
+		{"C", "Copy current tab content to clipboard"},
+		{"E", "Export current tab content to file"},
+		{"", ""},
+		{"+/=", "Increase refresh interval (slower)"},
+		{"-/_", "Decrease refresh interval (faster)"},
+		{"T", "Toggle theme (dark/light)"},
+		{"", ""},
+		{"[", "Toggle sidebar collapse"},
+		{"]", "Toggle bottom panel collapse"},
+		{"B", "Cycle bottom panel mode (Logs/Metrics/Events/Info)"},
+		{"", ""},
+		{"/", "Filter workloads in sidebar"},
+		{"Enter", "Select workload (in sidebar)"},
+		{"Esc", "Clear error / Close help / Exit filter"},
+		{"", ""},
 		{"H", "Toggle this help screen"},
-		{"Q", "Quit the application"},
-		{"Ctrl+C", "Force quit"},
+		{"Q or Ctrl+C", "Quit the application"},
 	}
 
 	for _, sc := range shortcuts {
@@ -58,10 +86,12 @@ func (h *Help) Render() string {
 		name string
 		desc string
 	}{
-		{"Status Bar", "Shows workload, mode (LIVE/PAUSED), connection health"},
-		{"Forecast Chart", "ASCII visualization of predicted metric values"},
-		{"Replica Table", "Scaling decisions with lead time selection"},
-		{"Scaler Status", "Current scaler state and desired replicas"},
+		{"Sidebar", "Interactive workload list with health indicators"},
+		{"Main Panel - Charts", "Quantile forecast visualization (P10/P50/P90)"},
+		{"Main Panel - Tables", "Replica scaling decisions with lead time"},
+		{"Main Panel - Config", "Workload and scaler configuration details"},
+		{"Main Panel - Logs", "Forecast and scaler event logs"},
+		{"Bottom Panel", "Logs, metrics, events, and system info (press B to cycle)"},
 	}
 
 	for _, p := range panels {

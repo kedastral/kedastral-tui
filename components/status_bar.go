@@ -10,17 +10,14 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-// StatusBar renders the header status bar.
 type StatusBar struct {
 	width int
 }
 
-// NewStatusBar creates a new status bar component.
 func NewStatusBar(width int) *StatusBar {
 	return &StatusBar{width: width}
 }
 
-// Render renders the status bar.
 func (s *StatusBar) Render(
 	workload string,
 	mode string,
@@ -28,6 +25,8 @@ func (s *StatusBar) Render(
 	snapshot *client.SnapshotData,
 	scalerMetrics *client.ScalerMetrics,
 	forecasterHealthy, scalerHealthy bool,
+	loading bool,
+	spinnerView string,
 	err error,
 ) string {
 	var b strings.Builder
@@ -44,6 +43,12 @@ func (s *StatusBar) Render(
 
 	b.WriteString("  ")
 	b.WriteString(modeStyle.Render(fmt.Sprintf("[%s]", mode)))
+
+	if loading {
+		b.WriteString("  ")
+		b.WriteString(spinnerView)
+		b.WriteString(" Fetching...")
+	}
 
 	if !lastUpdate.IsZero() {
 		b.WriteString("  ")

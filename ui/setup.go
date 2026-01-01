@@ -21,7 +21,6 @@ const (
 	stepComplete
 )
 
-// SetupModel handles the initial setup wizard.
 type SetupModel struct {
 	step          setupStep
 	forecasterURL string
@@ -33,7 +32,6 @@ type SetupModel struct {
 	height        int
 }
 
-// NewSetupModel creates a new setup wizard model.
 func NewSetupModel() SetupModel {
 	return SetupModel{
 		step:      stepForecasterURL,
@@ -41,12 +39,10 @@ func NewSetupModel() SetupModel {
 	}
 }
 
-// Init initializes the setup model.
 func (m SetupModel) Init() tea.Cmd {
 	return nil
 }
 
-// Update handles setup wizard messages.
 func (m SetupModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -99,7 +95,6 @@ func (m SetupModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-// View renders the setup wizard.
 func (m SetupModel) View() string {
 	var s strings.Builder
 

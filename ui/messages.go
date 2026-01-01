@@ -23,3 +23,13 @@ type healthMsg struct {
 	forecasterHealthy bool
 	scalerHealthy     bool
 }
+
+type workloadListMsg struct {
+	workloads []client.WorkloadInfo
+	err       error
+}
+
+type quantileSnapshotMsg struct {
+	data *client.QuantileSnapshotData
+	err  error
+}

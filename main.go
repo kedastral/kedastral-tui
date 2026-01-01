@@ -24,7 +24,7 @@ func main() {
 
 	if needsSetup {
 		setupModel := ui.NewSetupModel()
-		p := tea.NewProgram(setupModel)
+		p := tea.NewProgram(setupModel, tea.WithAltScreen(), tea.WithMouseCellMotion())
 
 		if _, err := p.Run(); err != nil {
 			fmt.Fprintf(os.Stderr, "Setup error: %v\n", err)
@@ -59,7 +59,7 @@ func main() {
 
 	model := ui.NewModel(cfg, c)
 
-	p := tea.NewProgram(model, tea.WithAltScreen())
+	p := tea.NewProgram(model, tea.WithAltScreen(), tea.WithMouseCellMotion())
 
 	if _, err := p.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)

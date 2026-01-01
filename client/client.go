@@ -36,6 +36,36 @@ type SnapshotData struct {
 	LeadTimeIndex int
 }
 
+// QuantileSnapshot represents a forecast snapshot with quantile data (API v2).
+type QuantileSnapshot struct {
+	Workload        string               `json:"workload"`
+	Metric          string               `json:"metric"`
+	GeneratedAt     time.Time            `json:"generatedAt"`
+	StepSeconds     int                  `json:"stepSeconds"`
+	HorizonSeconds  int                  `json:"horizonSeconds"`
+	Quantiles       map[string][]float64 `json:"quantiles"` // "p10", "p50", "p90"
+	Values          []float64            `json:"values"`    // Backward compatibility: fallback to P50
+	DesiredReplicas []int                `json:"desiredReplicas"`
+}
+
+// QuantileSnapshotData contains enriched quantile snapshot information.
+type QuantileSnapshotData struct {
+	Snapshot      QuantileSnapshot
+	Stale         bool
+	ForecastAge   time.Duration
+	LeadTimeIndex int
+	APIVersion    int // 1 or 2
+}
+
+// WorkloadInfo contains information about a workload.
+type WorkloadInfo struct {
+	Name            string    `json:"name"`
+	Namespace       string    `json:"namespace,omitempty"`
+	LastForecast    time.Time `json:"lastForecast"`
+	Healthy         bool      `json:"healthy"`
+	CurrentReplicas int       `json:"currentReplicas,omitempty"`
+}
+
 // ScalerMetrics contains parsed metrics from the scaler.
 type ScalerMetrics struct {
 	Active            bool
@@ -53,6 +83,103 @@ func New(forecasterURL, scalerURL string) *Client {
 			Timeout: 10 * time.Second,
 		},
 	}
+}
+
+// GetWorkloads fetches the list of available workloads.
+func (c *Client) GetWorkloads(ctx context.Context) ([]WorkloadInfo, error) {
+	url := fmt.Sprintf("%s/forecasts/workloads", c.forecasterURL)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch workloads: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		// If endpoint doesn't exist (404), return empty list (backward compatibility)
+		if resp.StatusCode == http.StatusNotFound {
+			return []WorkloadInfo{}, nil
+		}
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("forecaster returned status %d: %s", resp.StatusCode, string(body))
+	}
+
+	var response struct {
+		Workloads []WorkloadInfo `json:"workloads"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, fmt.Errorf("failed to decode workloads: %w", err)
+	}
+
+	return response.Workloads, nil
+}
+
+// GetQuantileSnapshot fetches the current forecast snapshot with quantile support.
+func (c *Client) GetQuantileSnapshot(ctx context.Context, workload string, leadTime time.Duration) (*QuantileSnapshotData, error) {
+	url := fmt.Sprintf("%s/forecast/current?workload=%s", c.forecasterURL, workload)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch snapshot: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("forecaster returned status %d: %s", resp.StatusCode, string(body))
+	}
+
+	var snapshot QuantileSnapshot
+	if err := json.NewDecoder(resp.Body).Decode(&snapshot); err != nil {
+		return nil, fmt.Errorf("failed to decode snapshot: %w", err)
+	}
+
+	// Detect API version based on presence of quantiles
+	apiVersion := 1
+	if len(snapshot.Quantiles) > 0 {
+		apiVersion = 2
+	} else {
+		// For v1 API, populate quantiles from values (treat as P50)
+		if len(snapshot.Values) > 0 {
+			snapshot.Quantiles = map[string][]float64{
+				"p50": snapshot.Values,
+			}
+		}
+	}
+
+	stale := resp.Header.Get("X-Kedastral-Stale") == "true"
+	forecastAge := time.Since(snapshot.GeneratedAt)
+
+	leadTimeIndex := 0
+	if snapshot.StepSeconds > 0 {
+		stepDuration := time.Duration(snapshot.StepSeconds) * time.Second
+		leadSteps := int(leadTime / stepDuration)
+		if leadSteps >= len(snapshot.DesiredReplicas) {
+			leadSteps = len(snapshot.DesiredReplicas) - 1
+		}
+		if leadSteps > 0 {
+			leadTimeIndex = leadSteps
+		}
+	}
+
+	return &QuantileSnapshotData{
+		Snapshot:      snapshot,
+		Stale:         stale,
+		ForecastAge:   forecastAge,
+		LeadTimeIndex: leadTimeIndex,
+		APIVersion:    apiVersion,
+	}, nil
 }
 
 // GetSnapshot fetches the current forecast snapshot for the given workload.

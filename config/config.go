@@ -18,6 +18,7 @@ type Config struct {
 	RefreshInterval time.Duration `json:"refresh_interval,omitempty"`
 	LeadTime        time.Duration `json:"lead_time,omitempty"`
 	LogLevel        string        `json:"log_level,omitempty"`
+	Theme           string        `json:"theme,omitempty"`
 }
 
 // ParseFlags parses configuration from file, environment variables, and command-line flags.
@@ -56,12 +57,18 @@ func ParseFlags() (*Config, bool) {
 		logLevelDefault = getEnv("LOG_LEVEL", "error")
 	}
 
+	themeDefault := fileConfig.Theme
+	if themeDefault == "" {
+		themeDefault = getEnv("THEME", "dark")
+	}
+
 	flag.StringVar(&cfg.ForecasterURL, "forecaster-url", forecasterDefault, "Forecaster HTTP URL (required)")
 	flag.StringVar(&cfg.ScalerURL, "scaler-url", scalerDefault, "Scaler HTTP URL")
 	flag.StringVar(&cfg.Workload, "workload", workloadDefault, "Workload name to monitor (required)")
 	flag.DurationVar(&cfg.RefreshInterval, "refresh-interval", refreshDefault, "Refresh interval in live mode")
 	flag.DurationVar(&cfg.LeadTime, "lead-time", leadTimeDefault, "Lead time for replica selection highlighting")
 	flag.StringVar(&cfg.LogLevel, "log-level", logLevelDefault, "Log level: debug, info, warn, error")
+	flag.StringVar(&cfg.Theme, "theme", themeDefault, "Color theme: dark, light")
 
 	flag.Parse()
 
@@ -100,7 +107,29 @@ func getConfigPath() string {
 	return filepath.Join(homeDir, ".config", "kedastral-tui", "config.json")
 }
 
-// LoadConfigFile loads configuration from the config file if it exists.
+func SaveConfig(cfg *Config) error {
+	configPath := getConfigPath()
+	if configPath == "" {
+		return fmt.Errorf("unable to determine config path")
+	}
+
+	data, err := json.MarshalIndent(cfg, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal config: %w", err)
+	}
+
+	configDir := filepath.Dir(configPath)
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		return fmt.Errorf("failed to create config directory: %w", err)
+	}
+
+	if err := os.WriteFile(configPath, data, 0644); err != nil {
+		return fmt.Errorf("failed to write config file: %w", err)
+	}
+
+	return nil
+}
+
 func LoadConfigFile() (*Config, error) {
 	cfg := &Config{}
 
